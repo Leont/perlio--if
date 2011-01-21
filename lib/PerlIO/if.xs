@@ -49,48 +49,40 @@ typedef struct { const char* key; func value; } map;
 static map tests[] = {
 	{ "buffered", is_buffered },
 	{ "crlf"    , is_crlf     },
-	{ "cancrlf" , can_crlf    },
+	{ "can_crlf" , can_crlf    },
 };
 
-static func S_get_io_test(pTHX_ const char* test_name, size_t test_length) {
+static func S_get_io_test(pTHX_ const char* test_name) {
 	int i;
 	for (i = 0; i < sizeof tests / sizeof *tests; ++i) {
-		if (strncmp(test_name, tests[i].key, test_length) == 0)
+		if (strEQ(test_name, tests[i].key))
 			return tests[i].value;
 	}
 	Perl_croak(aTHX_ "No such test '%s' known", test_name);
 }
-#define get_io_test(name, length) S_get_io_test(aTHX_ name, length)
-
-struct arguments {
-	SV* test_name;
-	const char* layer;
-	int negate;
-};
-
-static void S_get_arguments(pTHX_ struct arguments* parsed, SV* raw) {
-	const char* argstr = SvPV_nolen(raw);
-	const char* delim = strchr(argstr, ',');
-
-	parsed->negate = argstr[0] == '!';
-	if (parsed->negate)
-		argstr++;
-	while(isblank(*argstr))
-		argstr++;
-	parsed->test_name = sv_2mortal(newSVpvn(argstr, delim - argstr));
-	parsed->layer = delim + 1;
-}
-#define get_arguments(parsed, raw) S_get_arguments(aTHX_ parsed, raw)
+#define get_io_test(name) S_get_io_test(aTHX_ name)
 
 static IV PerlIOIf_pushed(pTHX_ PerlIO *f, const char *mode, SV *arg, PerlIO_funcs *tab) {
 	if (PerlIOValid(f) && SvOK(arg)) {
-		struct arguments args;
-		get_arguments(&args, arg);
-		func test = get_io_test(SvPV_nolen(args.test_name), sv_len(args.test_name));
-		int tested = test(aTHX_ f);
-		if (args.negate ? !tested : tested) {
-			PerlIO_apply_layers(aTHX_ f, NULL, args.layer);
-		}
+		SV* test_name;
+		const char* layer;
+		int negate;
+		func test;
+		const char* argstr = SvPV_nolen(arg);
+		const char* delim = strchr(argstr, ',');
+
+		if (!delim)
+			Perl_croak(aTHX_ "No layer specified in :if(%s)!", argstr);
+		negate = argstr[0] == '!';
+		if (negate)
+			argstr++;
+		test_name = sv_2mortal(newSVpvn(argstr, delim - argstr));
+		layer = delim + 1;
+		while(isblank(*layer))
+			layer++;
+		test = get_io_test(SvPV_nolen(test_name));
+		if (test(aTHX_ f) != negate)
+			PerlIO_apply_layers(aTHX_ f, mode, layer);
 		return 0;
 	}
 	return -1;
