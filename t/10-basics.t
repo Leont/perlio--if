@@ -17,4 +17,7 @@ ok binmode($fh, ':if(!buffered,crlf)'), 'binmode succedded';
 ok query_handle($fh, 'buffered'), 'Handle is buffered again';
 ok query_handle($fh, 'crlf'), 'Handle is crlf too';
 
+my $fh2;
+lives_ok { open $fh2, '<:if(!buffered, perlio):encoding(utf-8)', $0 or die $!; } 'Can open :if(!buffered,perlio):encoding(utf-8)';
+
 done_testing;

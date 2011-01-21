@@ -88,6 +88,20 @@ static IV PerlIOIf_pushed(pTHX_ PerlIO *f, const char *mode, SV *arg, PerlIO_fun
 	return -1;
 }
 
+static PerlIO* PerlIOIf_open(pTHX_ PerlIO_funcs *self, PerlIO_list_t *layers, IV n, const char *mode, int fd, int imode, int perm, PerlIO *old, int narg, SV **args) {
+	PerlIO_funcs * const tab = PerlIO_layer_fetch(aTHX_ layers, n - 1, PerlIO_default_layer(aTHX_ 0));
+	if (tab && tab->Open) {
+		PerlIO* ret = (*tab->Open)(aTHX_ tab, layers, n - 1, mode, fd, imode, perm, old, narg, args);
+		if (ret && PerlIO_push(aTHX_ ret, self, mode, PerlIOArg) == -1) {
+			PerlIO_close(ret);
+			return NULL;
+		}
+		return ret;
+	}
+	SETERRNO(EINVAL, LIB_INVARG);
+	return NULL;
+}
+
 PerlIO_funcs PerlIO_if = {
 	sizeof(PerlIO_funcs),
 	"if",
@@ -95,6 +109,7 @@ PerlIO_funcs PerlIO_if = {
 	PERLIO_K_DUMMY | PERLIO_K_UTF8 | PERLIO_K_MULTIARG,
 	PerlIOIf_pushed,
 	NULL,
+	PerlIOIf_open,
 	NULL,
 	NULL,
 	NULL,
@@ -106,19 +121,17 @@ PerlIO_funcs PerlIO_if = {
 	NULL,
 	NULL,
 	NULL,
-	NULL,                       /* flush */
-	NULL,                       /* fill */
 	NULL,
 	NULL,
 	NULL,
 	NULL,
-	NULL,                       /* get_base */
-	NULL,                       /* get_bufsiz */
-	NULL,                       /* get_ptr */
-	NULL,                       /* get_cnt */
-	NULL,                       /* set_ptrcnt */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 };
-
 
 MODULE = PerlIO::if				PACKAGE = PerlIO::if
 
