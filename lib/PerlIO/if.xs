@@ -92,7 +92,7 @@ static PerlIO* PerlIOIf_open(pTHX_ PerlIO_funcs *self, PerlIO_list_t *layers, IV
 	PerlIO_funcs * const tab = PerlIO_layer_fetch(aTHX_ layers, n - 1, PerlIO_default_layer(aTHX_ 0));
 	if (tab && tab->Open) {
 		PerlIO* ret = (*tab->Open)(aTHX_ tab, layers, n - 1, mode, fd, imode, perm, old, narg, args);
-		if (ret && PerlIO_push(aTHX_ ret, self, mode, PerlIOArg) == -1) {
+		if (ret && PerlIO_push(aTHX_ ret, self, mode, PerlIOArg) == NULL) {
 			PerlIO_close(ret);
 			return NULL;
 		}
