@@ -2,6 +2,7 @@ Revision history for PerlIO-if
 
 {{$NEXT}}
           Correctly check return value from PerlIO_push
+          Cast PerlIO_function in a backwards compatible way
 
 0.001     2011-01-21 16:39:14 Europe/Amsterdam
-    -
+          Initial version

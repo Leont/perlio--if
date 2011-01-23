@@ -102,7 +102,7 @@ static PerlIO* PerlIOIf_open(pTHX_ PerlIO_funcs *self, PerlIO_list_t *layers, IV
 	return NULL;
 }
 
-PerlIO_funcs PerlIO_if = {
+const PerlIO_funcs PerlIO_if = {
 	sizeof(PerlIO_funcs),
 	"if",
 	0,
@@ -136,4 +136,4 @@ PerlIO_funcs PerlIO_if = {
 MODULE = PerlIO::if				PACKAGE = PerlIO::if
 
 BOOT:
-	PerlIO_define_layer(aTHX_ PERLIO_FUNCS_CAST(&PerlIO_if));
+	PerlIO_define_layer(aTHX_ (PerlIO_funcs*)&PerlIO_if);
