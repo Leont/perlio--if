@@ -63,7 +63,15 @@ static func S_get_io_test(pTHX_ const char* test_name) {
 #define get_io_test(name) S_get_io_test(aTHX_ name)
 
 static IV PerlIOIf_pushed(pTHX_ PerlIO *f, const char *mode, SV *arg, PerlIO_funcs *tab) {
-	if (PerlIOValid(f) && SvOK(arg)) {
+	if (!PerlIOValid(f)) {
+		SETERRNO(EBADF, SS_IVCHAN);
+		return -1;
+	}
+	else if (!arg || !SvOK(arg)) {
+		SETERRNO(EINVAL, LIB_INVARG);
+		return -1;
+	}
+	else {
 		SV* test_name;
 		const char* layer;
 		int negate;
@@ -71,8 +79,10 @@ static IV PerlIOIf_pushed(pTHX_ PerlIO *f, const char *mode, SV *arg, PerlIO_fun
 		const char* argstr = SvPV_nolen(arg);
 		const char* delim = strchr(argstr, ',');
 
-		if (!delim)
-			Perl_croak(aTHX_ "No layer specified in :if(%s)!", argstr);
+		if (!delim) {
+			SETERRNO(EINVAL, LIB_INVARG);
+			return -1;
+		}
 		negate = argstr[0] == '!';
 		if (negate)
 			argstr++;
@@ -85,7 +95,6 @@ static IV PerlIOIf_pushed(pTHX_ PerlIO *f, const char *mode, SV *arg, PerlIO_fun
 			PerlIO_apply_layers(aTHX_ f, mode, layer);
 		return 0;
 	}
-	return -1;
 }
 
 static PerlIO* PerlIOIf_open(pTHX_ PerlIO_funcs *self, PerlIO_list_t *layers, IV n, const char *mode, int fd, int imode, int perm, PerlIO *old, int narg, SV **args) {

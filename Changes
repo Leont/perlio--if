@@ -1,6 +1,7 @@
 Revision history for PerlIO-if
 
 {{$NEXT}}
+          Give more conformant errors
 
 0.002     2011-01-23 14:36:51 Europe/Amsterdam
           Correctly check return value from PerlIO_push

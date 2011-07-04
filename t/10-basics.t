@@ -21,4 +21,6 @@ lives_ok { open $fh2, '<:if(!buffered, perlio):encoding(utf-8)', $0 or die $!; }
 my $fh3;
 lives_ok { open $fh3, '<:if(!buffered, encoding(utf-8))', $0 or die $!; } 'Can open ::if(!buffered, encoding(utf-8))';
 
+throws_ok { open my $fh4, '<:if', $0 or die $! } qr/^Invalid argument at /, 'if without argument throws exception';
+
 done_testing;
