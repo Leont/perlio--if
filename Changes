@@ -1,6 +1,8 @@
 Revision history for PerlIO-if
 
 {{$NEXT}}
+
+0.003     2011-07-04 13:19:18 Europe/Amsterdam
           Give more conformant errors
           Be more win32 compatible
 
